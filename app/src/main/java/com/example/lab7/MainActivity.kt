@@ -35,7 +35,11 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         val viewModel = StudentViewModel(
             listOf(
-                Student("a", "a", "a")
+                Student("h2210147", "Gun Rui", "M25404"),
+                Student("h2210066", "Jayden", "M25404"),
+                Student("h2210120", "Zhehan", "M25404"),
+                Student("h2210102","Logan", "M25404"),
+                Student("h2210169", "Liqian", "M25405")
             )
         )
 
@@ -78,7 +82,7 @@ class MainActivity : ComponentActivity() {
 
         NavHost(
             navController = navController,
-            startDestination = "homePage"
+            startDestination = "recordingPage"
         ) {
             composable("homePage") {HomePage(navController, viewModel)}
             composable(

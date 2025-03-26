@@ -31,15 +31,14 @@ class SpeechToTextViewModel(application: Application) : AndroidViewModel(applica
                 matches?.let {
                     _recognizedText.value = it[0]
                 }
-                _isListening.value = false
             }
 
             override fun onError(error: Int) {
-                _isListening.value = false
+
             }
 
             override fun onEndOfSpeech() {
-                _isListening.value = false
+
             }
 
             override fun onPartialResults(partialResults: Bundle?) {}
@@ -61,10 +60,15 @@ class SpeechToTextViewModel(application: Application) : AndroidViewModel(applica
 
     fun stopListening() {
         speechRecognizer.stopListening()
+        _isListening.value = false
     }
 
     override fun onCleared() {
         super.onCleared()
         speechRecognizer.destroy()
+    }
+
+    fun clearRecognizedText() {
+        _recognizedText.value = ""
     }
 }

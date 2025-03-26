@@ -48,7 +48,7 @@ class HomePage {
             }
 
             Wrapper(navController) {
-                LazyColumn {
+                LazyColumn (verticalArrangement = Arrangement.spacedBy(6.dp)) {
                     items(viewModel.students) { student ->
                         StudentCard(student)
                     }

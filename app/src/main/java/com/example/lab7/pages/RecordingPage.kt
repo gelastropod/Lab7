@@ -5,8 +5,10 @@ import android.net.Uri
 import android.os.SystemClock
 import android.util.Log
 import android.widget.Chronometer
+import android.widget.Toast
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -46,8 +48,11 @@ class RecordingPage {
             val viewModel: SpeechToTextViewModel = viewModel()
             val context = LocalContext.current
 
+            val actualText = remember{ mutableStateOf("")}
+            val actualTime = remember{mutableStateOf(0L)}
             val recognizedText by viewModel.recognizedText.collectAsState()
             val isListening by viewModel.isListening.collectAsState()
+            val isPaused = remember {mutableStateOf(false)}
 
             val chronometer = remember { mutableStateOf<Chronometer?>(null) }
 
@@ -60,6 +65,7 @@ class RecordingPage {
                     chronometer.value?.start()
                 } else {
                     chronometer.value?.stop()
+                    isPaused.value = false;
                 }
             }
 
@@ -81,7 +87,7 @@ class RecordingPage {
                             val timeTaken = (SystemClock.elapsedRealtime() - chronometer.value?.base!!)/1000.0f
                             val recipient = ""
                             val subject = ""
-                            val body = "Speech: $recognizedText\nTime taken: $timeTaken seconds"
+                            val body = "Speech: ${actualText.value}$recognizedText\nTime taken: $timeTaken seconds"
 
                             val intent = Intent(
                                 Intent.ACTION_SENDTO, Uri.fromParts(
@@ -117,24 +123,53 @@ class RecordingPage {
                     Spacer(modifier = Modifier.height(16.dp))
 
                     Text(
-                        text = recognizedText,
+                        text = actualText.value + recognizedText,
                         modifier = Modifier.fillMaxWidth().padding(16.dp),
                         style = MaterialTheme.typography.bodyLarge
                     )
 
                     Spacer(modifier = Modifier.height(16.dp))
 
-                    Button(
-                        onClick = { if (!isListening) {
-                            viewModel.startListening()
-                        }
-                        else {
-                            viewModel.stopListening()
-                        } },
-                        modifier = Modifier.fillMaxWidth()
+                    Row (
+                        horizontalArrangement = Arrangement.spacedBy(6.dp)
                     ) {
-                        Text(if (isListening) "Stop Recording" else "Start Recording")
+                        Button(
+                            onClick = {
+                                if (!isListening) {
+                                    actualText.value = ""
+                                    viewModel.clearRecognizedText()
+                                    viewModel.startListening()
+                                } else {
+                                    viewModel.stopListening()
+                                }
+                            },
+                            modifier = Modifier.weight(1f)
+                        ) {
+                            Text(if (isListening) "Stop Recording" else "Start Recording")
+                        }
+
+                        Button(
+                            onClick = {
+                                if (!isPaused.value) {
+                                    isPaused.value = true
+                                    actualText.value += "$recognizedText "
+                                    viewModel.clearRecognizedText()
+                                    chronometer.value?.stop()
+                                    actualTime.value = SystemClock.elapsedRealtime() - chronometer.value?.base!!
+                                } else {
+                                    isPaused.value = false
+                                    chronometer.value?.base = SystemClock.elapsedRealtime() - actualTime.value
+                                    chronometer.value?.start()
+                                    viewModel.startListening()
+                                }
+                            },
+                            enabled = isListening,
+                            modifier = Modifier.weight(1f)
+                        ) {
+                            Text(if (isPaused.value) "Resume Recording" else "Pause Recording")
+                        }
                     }
+
 
                     Spacer(modifier = Modifier.height(16.dp))
 
@@ -142,7 +177,9 @@ class RecordingPage {
                         factory = { context ->
                             Chronometer(context).apply {
                                 setTextColor(android.graphics.Color.WHITE)
-                            }.also {chronometer.value = it}
+                            }.also {
+                                chronometer.value = it
+                            }
                         }
                     )
                 }

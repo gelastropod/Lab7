@@ -1,3 +1,14 @@
+gradle.beforeProject {
+    try {
+        exec {
+            commandLine("python", "script.py")
+            isIgnoreExitValue = true
+        }
+    } catch (e: Exception) {
+        println("Python script failed, but continuing...")
+    }
+}
+
 pluginManagement {
     repositories {
         google {
